@@ -2,6 +2,8 @@ import { Event, SimplePool, nip19, relayInit } from 'nostr-tools'
 import { useEffect, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 
+import { Spinner } from './components'
+
 const SourceRelays = [
   'wss://relay.damus.io',
   'wss://offchain.pub',
@@ -31,6 +33,7 @@ function App() {
   const [syncedEventCount, setSyncedEventCount] = useState(0)
   const [noteCount, setNoteCount] = useState(0)
   const [profileCount, setProfileCount] = useState(0)
+  const [otherCount, setOtherCount] = useState(0)
 
   const handleSync = () => {
     if (!npubRegex.test(npub)) {
@@ -49,12 +52,12 @@ function App() {
     setSyncedEventCount(0)
     setNoteCount(0)
     setProfileCount(0)
+    setOtherCount(0)
 
     const pool = new SimplePool()
     setSourcePool(pool)
     const sub = pool.sub(sourceRelays, [
       {
-        kinds: [0, 1],
         limit: 1000,
         authors: [nip19.decode(npub).data.toString()],
       },
@@ -97,6 +100,8 @@ function App() {
           setProfileCount((count) => count + 1)
         } else if (e.kind === 1) {
           setNoteCount((count) => count + 1)
+        } else {
+          setOtherCount((count) => count + 1)
         }
       }
 
@@ -136,13 +141,18 @@ function App() {
         onChange={(e) => setTargetRelay(e.target.value)}
       />
 
-      <button className="btn w-[128px] h-[48px] mb-4" disabled={loading} onClick={handleSync}>
-        {loading ? 'Syncing...' : 'Sync'}
+      <button
+        className="btn w-[128px] h-[48px] mb-4 text-center"
+        disabled={loading}
+        onClick={handleSync}
+      >
+        {loading ? <Spinner /> : 'Sync'}
       </button>
 
       {completed && (
         <div className="font-bold mb-4">
-          ✅ {syncedEventCount} events synced ({noteCount} notes, {profileCount} profiles)
+          ✅ {syncedEventCount} events synced ({noteCount} notes, {profileCount} profiles,{' '}
+          {otherCount} others)
         </div>
       )}
 
